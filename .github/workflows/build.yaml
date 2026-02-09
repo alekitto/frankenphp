@@ -8,7 +8,6 @@ on:
 jobs:
   build_package:
     name: Build package - PHP ${{ matrix.php_version.version }}
-    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -40,69 +39,14 @@ jobs:
       packages: write
       id-token: write
 
-    steps:
-      - uses: actions/checkout@master
-        with:
-          fetch-depth: 1
-
-      - uses: bitcompat/compute-ghcr-revision-action@v1
-        id: version-tags
-        with:
-          version: '${{ matrix.php_version.version }}'
-          debian_codename: 'bookworm'
-          major_only_tag: 'false'
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            image=moby/buildkit:v0.23.2
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: docker_meta
-        name: Extract docker image metadata
-        uses: docker/metadata-action@v5.8.0
-        with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-          tags: |
-            ${{ matrix.php_version.latest && 'latest' || '' }}
-            ${{ steps.version-tags.outputs.tags }}
-            type=sha
-            type=sha,format=long
-
-      - name: Build and Push container images
-        uses: docker/build-push-action@v6
-        with:
-          platforms: linux/amd64,linux/arm64
-          build-args: |-
-            BUILD_VERSION=${{ matrix.php_version.version }}
-          push: 'true'
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: |-
-            type=gha,scope=${{ matrix.php_version.cache-scope }}
-            type=gha,scope=${{ matrix.php_version.cache-scope }}-arm
-          cache-to: type=gha,mode=max,scope=${{ matrix.php_version.cache-scope }}
-
-      - name: Setup CRANE
-        uses: imjasonh/setup-crane@v0.4
-
-      - name: Flatten images
-        id: flatten_images
-        run: |
-          set -ex
-          DIGEST=""
-          while read -r IMG; do
-            export OUT=$(crane flatten "$IMG")
-            DIGEST+="$IMG@$(echo "$OUT" | awk 'END{print}' | cut -d'@' -f2) "
-          done <<< $(echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[]')
-          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+    uses: alekitto/frankenphp/.github/workflows/build-package.yaml@main
+    with:
+      name: main
+      cache-scope: '${{ matrix.php_version.cache-scope }}'
+      version: ${{ matrix.php_version.version }}
+      latest: ${{ matrix.php_version.latest }}
+      major_only_tag: false
+      debian_codename: bookworm
+      build-args: |
+        XDEBUG_VERSION=${{ matrix.php_version.xdebug }}
+    secrets: inherit

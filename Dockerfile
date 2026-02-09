@@ -185,8 +185,8 @@ RUN <<EOT
   mkdir -p /opt/src
   cd /opt/src
 
-  curl -L https://github.com/dunglas/frankenphp/archive/refs/tags/v1.9.1.tar.gz | tar xzv
-  cd frankenphp-1.9.1/caddy/frankenphp
+  curl -L https://github.com/php/frankenphp/archive/refs/tags/v1.11.1.tar.gz | tar xzv
+  cd frankenphp-1.11.1/caddy/frankenphp
   CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) -L/opt/bitnami/php/lib/ $(php-config --libs)" go build
   strip --strip-unneeded ./frankenphp
 
