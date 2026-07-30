@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile:1.20
 
-ARG BUILD_VERSION
+ARG BUILD_VERSION=8.4.20
 # renovate: datasource=github-releases depName=maxmind/libmaxminddb
-ARG LIBMAXMINDDB_VERSION=1.12.2
+ARG LIBMAXMINDDB_VERSION=1.13.3
 # renovate: datasource=github-tags depName=xdebug/xdebug
-ARG XDEBUG_VERSION=3.5.0
+ARG XDEBUG_VERSION=3.5.1
+ARG FRANKENPHP_VERSION=1.12.2
 
 FROM bitnami/minideb:trixie AS libmaxminddb_build
 
@@ -77,7 +78,7 @@ ADD --link https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar 
 RUN chmod 755 /opt/bitnami/php/bin/pie
 
 # renovate: datasource=github-releases depName=composer/composer
-ARG COMPOSER_VERSION=2.9.4
+ARG COMPOSER_VERSION=2.9.5
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php --install-dir=/opt/bitnami/php/bin --version=$COMPOSER_VERSION && \
@@ -93,7 +94,7 @@ ARG APCU_VERSION=5.1.28
 # renovate: datasource=github-releases depName=Imagick/imagick
 ARG IMAGICK_VERSION=3.8.1
 # renovate: datasource=github-releases depName=mongodb/mongo-php-driver
-ARG MONGODB_VERSION=2.1.4
+ARG MONGODB_VERSION=2.2.1
 ARG XDEBUG_VERSION
 # renovate: datasource=github-releases depName=maxmind/MaxMind-DB-Reader-php extractVersion=^v(?<version>.*)$
 ARG MAXMIND_READER_VERSION=1.13.1
@@ -186,13 +187,14 @@ RUN <<EOT
   ldconfig
 EOT
 
+ARG FRANKENPHP_VERSION
 RUN <<EOT
   export PATH=$PATH:/usr/local/go/bin
   mkdir -p /opt/src
   cd /opt/src
 
-  curl -L https://github.com/php/frankenphp/archive/refs/tags/v1.11.1.tar.gz | tar xzv
-  cd frankenphp-1.11.1/caddy/frankenphp
+  curl -L https://github.com/php/frankenphp/archive/refs/tags/v${FRANKENPHP_VERSION}.tar.gz | tar xzv
+  cd frankenphp-${FRANKENPHP_VERSION}/caddy/frankenphp
   CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) -L/opt/bitnami/php/lib/ $(php-config --libs)" go build
   strip --strip-unneeded ./frankenphp
 
