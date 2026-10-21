@@ -108,19 +108,25 @@ RUN <<EOT
   touch configure.ac aclocal.m4 configure Makefile.am Makefile.in
   mkdir BUILD
   cd BUILD
-  ../configure --with-pic --disable-sasl
-  make -j$(nproc) && make install
+  # Disable upstream recursive parallelism: libtest omits a link dependency.
+  ../configure --with-pic --disable-sasl --disable-jobserver
+  make -j1
+  make install
   cp ../LICENSE /opt/bitnami/common/licenses/libmemcached-1.0.18.txt
   cd ../..
   rm -rf aws-elasticache-cluster-client-libmemcached
 
   git clone -b php8.x https://github.com/awslabs/aws-elasticache-cluster-client-memcached-for-php.git
   cd aws-elasticache-cluster-client-memcached-for-php
+  sed -i 's@ext/standard/php_smart_string.h@Zend/zend_smart_string.h@' php_memcached_private.h
+  sed -i 's/zend_exception_get_default()/zend_ce_exception/g' php_memcached.c
   phpize
   mkdir BUILD
   cd BUILD
   ../configure --disable-memcached-sasl
-  make -j$(nproc) && make install
+  make -j$(nproc)
+  make install
+  php -n -d extension="$EXTENSION_DIR/memcached.so" --ri memcached
   cp ../LICENSE /opt/bitnami/common/licenses/aws-elasticache-cluster-client-memcached-for-php-3.2.0.txt
   cd ../..
   rm -rf aws-elasticache-cluster-client-memcached-for-php
@@ -145,7 +151,7 @@ ADD --link https://raw.githubusercontent.com/Imagick/imagick/$IMAGICK_VERSION/LI
 ADD --link https://raw.githubusercontent.com/mongodb/mongo-php-driver/$MONGODB_VERSION/LICENSE /opt/bitnami/php/licenses/peclmongodb-$MONGODB_VERSION.txt
 ADD --link https://raw.githubusercontent.com/xdebug/xdebug/$XDEBUG_VERSION/LICENSE /opt/bitnami/php/licenses/peclxdebug-$XDEBUG_VERSION.txt
 ADD --link https://raw.githubusercontent.com/maxmind/MaxMind-DB-Reader-php/v$MAXMIND_READER_VERSION/LICENSE /opt/bitnami/php/licenses/maxmind-db-reader-php-$MAXMIND_READER_VERSION.txt
-RUN cp /bitnami/blacksmith-sandbox/php-${BUILD_VERSION}/LICENSE /opt/bitnami/licenses/php-$BUILD_VERSION.txt
+RUN cp /bitnami/blacksmith-sandbox/php-${BUILD_VERSION}/LICENSE /opt/bitnami/php/licenses/php-$BUILD_VERSION.txt
 RUN mkdir -p /opt/bitnami/php/lib && ln -sv ../etc/php.ini /opt/bitnami/php/lib/php.ini
 
 RUN php -i # Test run executable
