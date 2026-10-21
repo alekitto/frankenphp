@@ -26,6 +26,7 @@ on:
         default: false
         required: false
       revision:
+        description: "Deprecated and ignored. Revision is computed from GHCR tags for the version and codename."
         type: string
         required: false
         default: '1'
