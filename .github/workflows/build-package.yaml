@@ -65,8 +65,11 @@ jobs:
 
           - name: Build and Push container images
             uses: docker/build-push-action@v6
+            env:
+                COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
             with:
                 platforms: linux/amd64
+                secret-envs: composer_auth=COMPOSER_AUTH
                 build-args: |-
                     ${{ inputs.build-args }}
                     BUILD_VERSION=${{ inputs.version }}
@@ -91,8 +94,11 @@ jobs:
 
           - name: Build and Push container images
             uses: docker/build-push-action@v6
+            env:
+                COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
             with:
                 platforms: linux/arm64
+                secret-envs: composer_auth=COMPOSER_AUTH
                 build-args: |-
                     ${{ inputs.build-args }}
                     BUILD_VERSION=${{ inputs.version }}
@@ -159,8 +165,11 @@ jobs:
 
       - name: Build and Push container images
         uses: docker/build-push-action@v6
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
         with:
           platforms: linux/amd64,linux/arm64
+          secret-envs: composer_auth=COMPOSER_AUTH
           build-args: |-
             ${{ inputs.build-args }}
             BUILD_VERSION=${{ inputs.version }}

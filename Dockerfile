@@ -100,7 +100,8 @@ ARG XDEBUG_VERSION
 # renovate: datasource=github-releases depName=maxmind/MaxMind-DB-Reader-php extractVersion=^v(?<version>.*)$
 ARG MAXMIND_READER_VERSION=1.13.1
 
-RUN pie install apcu/apcu:$APCU_VERSION && \
+RUN --mount=type=secret,id=composer_auth,env=COMPOSER_AUTH \
+    pie install apcu/apcu:$APCU_VERSION && \
     pie install imagick/imagick:$IMAGICK_VERSION
 
 RUN <<EOT
@@ -135,9 +136,12 @@ RUN <<EOT
   cd ../..
   rm -rf aws-elasticache-cluster-client-memcached-for-php
 EOT
-RUN PKG_CONFIG_PATH=/opt/bitnami/common/lib/pkgconfig:\$PKG_CONFIG_PATH pie install maxmind-db/reader-ext:$MAXMIND_READER_VERSION
-RUN pie install mongodb/mongodb-extension:$MONGODB_VERSION
-RUN pie install xdebug/xdebug:$XDEBUG_VERSION
+RUN --mount=type=secret,id=composer_auth,env=COMPOSER_AUTH \
+    PKG_CONFIG_PATH=/opt/bitnami/common/lib/pkgconfig:\$PKG_CONFIG_PATH pie install maxmind-db/reader-ext:$MAXMIND_READER_VERSION
+RUN --mount=type=secret,id=composer_auth,env=COMPOSER_AUTH \
+    pie install mongodb/mongodb-extension:$MONGODB_VERSION
+RUN --mount=type=secret,id=composer_auth,env=COMPOSER_AUTH \
+    pie install xdebug/xdebug:$XDEBUG_VERSION
 
 RUN mkdir -p /opt/bitnami/php/logs && \
     mkdir -p /opt/bitnami/php/tmp && \
